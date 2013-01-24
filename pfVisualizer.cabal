@@ -1,0 +1,20 @@
+name:           pfVisualizer
+version:        0.1
+cabal-version:  >= 1.2
+build-type:     Simple
+author:         Miguel Negrao
+
+executable pfVisualizer
+  hs-source-dirs:  src
+  main-is:         Main.hs
+  build-depends:   
+                   base >= 4,
+                   GLUT,
+                   OpenGL,
+                   containers,
+                   hosc >=0.12,
+                   split,
+                   random,
+                   stm >= 2.4
+  ghc-options:     -Wall -threaded -rtsopts
+
