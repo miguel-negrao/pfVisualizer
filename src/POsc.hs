@@ -17,7 +17,7 @@ import Display
 import System.Exit (exitSuccess)
 import Control.Concurrent.STM.TChan()
 
-data OSCInstruction = NewTriangles [ Tri ] | AddTriangles [ Tri ] | NewColors [ Cl ] | NewPoints [Vt] | Quit
+data OSCInstruction = NewTriangles [ Tri ] | AddTriangles [ Tri ] | NewColors [ Cl ] | NewPoints [Vt] |  NewCubes [Vt] | Quit
         deriving Show   
         
 packageFloats :: (GLfloat -> GLfloat -> GLfloat -> a) -> [GLfloat] -> [a] 
@@ -32,7 +32,8 @@ parseOSC :: Maybe Message -> Maybe OSCInstruction
 parseOSC (Just (Message "/triangles" xs) ) = Just $ NewTriangles $ splitEvery 3 $ packageFloats Vertex3 $ convertDListFloat xs
 parseOSC (Just (Message "/add_triangles" xs) ) = Just $ AddTriangles $ splitEvery 3 $ packageFloats Vertex3 $ convertDListFloat xs
 parseOSC (Just (Message "/colors" xs) ) = Just $ NewColors $ packageFloats Color3 $ convertDListFloat xs
-parseOSC (Just (Message "/points" xs) ) = Just $ NewPoints $ packageFloats Vertex3 $ convertDListFloat xs 
+parseOSC (Just (Message "/points" xs) ) = Just $ NewPoints $ packageFloats Vertex3 $ convertDListFloat xs
+parseOSC (Just (Message "/cubes" xs) ) = Just $ NewCubes $ packageFloats Vertex3 $ convertDListFloat xs 
 parseOSC (Just (Message "/quit" _) ) = Just Quit
 parseOSC (Just _) = Nothing
 parseOSC Nothing = Nothing
@@ -88,7 +89,11 @@ processOSCInstruction (NewColors cs) programState = do
         
 processOSCInstruction (NewPoints ps) programState = do
         pst@(PST _ oldColors _) <- get programState
-        programState $= pst{ geometry = PState.Points ps, colors =  oldColors++whites }        
+        programState $= pst{ geometry = PState.Points ps, colors =  oldColors++whites }
+
+processOSCInstruction (NewCubes ps) programState = do
+        pst@(PST _ oldColors _) <- get programState
+        programState $= pst{ geometry = PState.Cubes ps, colors =  oldColors++whites }                    
          
 processOSCInstruction Quit _ = exitSuccess
 

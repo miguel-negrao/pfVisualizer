@@ -12,7 +12,7 @@ executable pfVisualizer
                    GLUT,
                    OpenGL,
                    containers,
-                   hosc >=0.12,
+                   hosc ==0.13,
                    split,
                    random,
                    stm >= 2.4

@@ -24,12 +24,13 @@ reshape (Size w h) = viewport $= (Position 0 0,  Size minWH minWH) where
 --        loadIdentity
 --        translate (Vector3 0 0 (-4 :: GLfloat))        
 
-keyboardMouse programState (Char 'f') Down _ _ = updateToAngle programState 0.0 0.0
+keyboardMouse programState (Char 'f') Down _ _ = updateToAngle programState 90.0 (-90.0)
 keyboardMouse programState (Char 'b') Down _ _ = updateToAngle programState 180.0 0.0
 keyboardMouse programState (Char 'l') Down _ _ = updateToAngle programState 0.0 90.0
 keyboardMouse programState (Char 'r') Down _ _ = updateToAngle programState 0.0 (-90.0)
-keyboardMouse programState (Char 'u') Down _ _ = updateToAngle programState 0.0 90.0
+keyboardMouse programState (Char 'u') Down _ _ = updateToAngle programState 0.0 0.0
 keyboardMouse programState (Char 'd') Down _ _ = updateToAngle programState 0.0 (-90.0)
+keyboardMouse programState (Char 's') Down _ _ = updateToAngle programState (-22.5) 45.0
 keyboardMouse _ _ _ _ _ = return ()
 
 updateToAngle programState angleX angleY = do
@@ -44,5 +45,5 @@ mouseMotion programState (Position dx dy) = do
                 angy = (fromIntegral dy / 500-0.5)*360 
         programState $= pst{ cameraRotation = (angy,angx) }
         display programState
-        --putStrLn $ "mouse" ++ (show (dx,dy))
-        --hFlush stdout
+        --putStrLn $ "mouse" ++ (show (angy,angx))
+        hFlush stdout
