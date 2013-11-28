@@ -7,7 +7,7 @@ author:         Miguel Negrao
 executable pfVisualizer
   hs-source-dirs:  src
   main-is:         Main.hs
-  build-depends:   
+  build-depends:
                    base >= 4,
                    GLUT,
                    OpenGL,
@@ -15,6 +15,7 @@ executable pfVisualizer
                    hosc ==0.13,
                    split,
                    random,
-                   stm >= 2.4
+                   stm >= 2.4,
+                   safe
   ghc-options:     -Wall -threaded -rtsopts
 
