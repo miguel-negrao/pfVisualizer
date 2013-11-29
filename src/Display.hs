@@ -98,9 +98,10 @@ renderGeom (PState.Cubes ps) cs = zipWithM_ f ps cs
                 f (Vertex3 x y z) clr = preservingMatrix $ do
                         color clr
                         translate $ Vector3 x y z-- (0.0::GLfloat) 0.0 0.0
-                        let cubeW = (0.08::GLfloat)
+                        let cubeW = (0.06::GLfloat)
                         cube cubeW
-                        color $ Color3 (1.0::GLfloat) (1.0::GLfloat) (1.0::GLfloat)
+                        let wireFrameIntensity = (0.5::GLfloat)
+                        color $ Color3 wireFrameIntensity wireFrameIntensity wireFrameIntensity
                         cubeWireFrame cubeW
 
 vertifyTri :: Tri -> IO ()
