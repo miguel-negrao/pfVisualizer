@@ -32,7 +32,7 @@ main = do
 --  ambient (Light 0) $= Color4 0.1 0.1 0.1 1.0
 --  diffuse (Light 0) $= Color4 0.9 0.9 0.9 1.0
 --  light (Light 0) $= Enabled
-  reshapeCallback $= Just reshape
+  --reshapeCallback $= Just reshape
   depthFunc $= Just Less -- specifies comparison function for DepthBuffer
   state <- newIORef initialState
   keyboardMouseCallback $= Just (keyboardMouse state)

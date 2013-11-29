@@ -47,6 +47,6 @@ mouseMotion programState (Position dx dy) = do
         let
                 angx = (fromIntegral dx / 500-0.5)*360
                 angy = (fromIntegral dy / 500-0.5)*360
-        programState $= pst{ cameraRotation = (angx,angy,0.0) }
+        programState $= pst{ cameraRotation = (270+angy,180,90.0+angx) }
        -- putStrLn $ "mousehahah" ++ (show (dx,dy))
        -- hFlush stdout
