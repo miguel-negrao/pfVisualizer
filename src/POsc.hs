@@ -22,34 +22,36 @@ data OSCInstruction = NewTriangles [ Tri ] | AddTriangles [ Tri ] | NewColors [ 
         
 packageFloats :: (GLfloat -> GLfloat -> GLfloat -> a) -> [GLfloat] -> [a] 
 packageFloats g xs = 
-        let vts = splitEvery 3 xs
+        let vts = chunksOf 3 xs
         in fmap (\[a,b,c]-> g a b c) vts
 
 convertDListFloat :: [Datum] -> [GLfloat]
 convertDListFloat = fmap (realToFrac . double2Float . datum_real_err)
 
-parseOSC :: Maybe Message -> Maybe OSCInstruction
-parseOSC (Just (Message "/triangles" xs) ) = Just $ NewTriangles $ splitEvery 3 $ packageFloats Vertex3 $ convertDListFloat xs
-parseOSC (Just (Message "/add_triangles" xs) ) = Just $ AddTriangles $ splitEvery 3 $ packageFloats Vertex3 $ convertDListFloat xs
-parseOSC (Just (Message "/colors" xs) ) = Just $ NewColors $ packageFloats Color3 $ convertDListFloat xs
-parseOSC (Just (Message "/points" xs) ) = Just $ NewPoints $ packageFloats Vertex3 $ convertDListFloat xs
-parseOSC (Just (Message "/cubes" xs) ) = Just $ NewCubes $ packageFloats Vertex3 $ convertDListFloat xs 
-parseOSC (Just (Message "/quit" _) ) = Just Quit
-parseOSC (Just _) = Nothing
-parseOSC Nothing = Nothing
+parseOSCMessage :: Message -> Maybe OSCInstruction
+parseOSCMessage (Message "/triangles" xs) = Just $ NewTriangles $ chunksOf 3 $ packageFloats Vertex3 $ convertDListFloat xs
+parseOSCMessage (Message "/add_triangles" xs) = Just $ AddTriangles $ chunksOf 3 $ packageFloats Vertex3 $ convertDListFloat xs
+parseOSCMessage (Message "/colors" xs) = Just $ NewColors $ packageFloats Color3 $ convertDListFloat xs
+parseOSCMessage (Message "/points" xs) = Just $ NewPoints $ packageFloats Vertex3 $ convertDListFloat xs
+parseOSCMessage (Message "/cubes" xs) = Just $ NewCubes $ packageFloats Vertex3 $ convertDListFloat xs 
+parseOSCMessage (Message "/quit" _) = Just Quit
+parseOSCMessage _ = Nothing
 
+startOSC :: Int -> IO (TChan OSCInstruction)
 startOSC port = do
         oscInstrs <- atomically newTChan
         _ <- forkIO $ listenOSC oscInstrs port
         return oscInstrs 
 
 listenOSC:: TChan OSCInstruction -> Int -> IO ()
-listenOSC tlist port =  
-        let 
-                g x = fromMaybe (return ()) ( (atomically . writeTChan tlist) <$> parseOSC x ) -- >> print x >> (hFlush stdout)      
-                f fd = forever (recvMessage fd >>= g )
-                t = udpServer "127.0.0.1" port
-        in withTransport t f
+listenOSC chan port = tcpServer' port procPacket where 
+  procPacket fd = forever ( recvMessages fd >>= procMsgs )
+  procMsgs = mapM_ procMsg
+  procMsg msg = fromMaybe (return ()) ((atomically . writeTChan chan) <$> parseOSCMessage msg ) -- >> print msg >> (hFlush stdout)
+  --I've moved to tcp to not have to deal with dropped packets.
+  --t = udpServer "127.0.0.1" port
+  --in withTransport t f
+
 
 
 processOSC :: TChan OSCInstruction -> IORef PST -> IO ()
@@ -65,9 +67,13 @@ processOSC oscInstrs progState = do
         maybe (return ()) g b
         
 
+white :: Color3 GLfloat
 white = Color3 (1.0::GLfloat) 1.0 1.0
+
+whites :: [Color3 GLfloat]
 whites = repeat white
 
+processOSCTris :: HasSetter s => PST -> [Tri] -> s PST -> IO ()
 processOSCTris pst@(PST _ oldColors _) tris programState = programState $= pst{ geometry = PState.Triangles tris, colors = oldColors++whites }
         
 processOSCInstruction:: OSCInstruction -> IORef PST -> IO()       
@@ -98,6 +104,7 @@ processOSCInstruction (NewCubes ps) programState = do
 processOSCInstruction Quit _ = exitSuccess
 
 --Not working
+{--
 withTimeout :: Int -> STM a -> IO (Maybe a)
 withTimeout time fun = do
         mv <- atomically newEmptyTMVar
@@ -107,6 +114,7 @@ withTimeout time fun = do
         x <- atomically (fmap Just fun `orElse` (takeTMVar mv >> return Nothing))
         killThread tid
         return x
+--}
 
 --TESTING
 

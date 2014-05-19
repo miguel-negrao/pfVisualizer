@@ -40,14 +40,15 @@ main = do
   idleCallback $= Just (display state)
   displayCallback $= display state
   timerCallBack oscTChan state
+  actionOnWindowClose $= MainLoopReturns
   mainLoop
 
 initialState :: PST
 initialState = PST  v c r
         where
-                is = map (/ 12) [] --[1..12]
-                --v = PState.Triangles $ map (\x -> [ Vertex3 (0.1+x) 0.0 0.0, Vertex3 (0.0+x) 0.7 x, Vertex3 (0.0+x) (x-0.5) 0.0 ] ) is
-                v = PState.Points $ map (\x ->  Vertex3 (0.1+x) 0.0 0.0 ) is
+                is = map (/ 12) []--[1..12]
+                v = PState.Triangles $ map (\x -> [ Vertex3 (0.1+x) 0.0 0.0, Vertex3 (0.0+x) 0.7 x, Vertex3 (0.0+x) (x-0.5) 0.0 ] ) is
+                --v = PState.Points $ map (\x ->  Vertex3 (0.1+x) 0.0 0.0 ) is
                 c = map (\x -> Color3 x 0.2 0.3) is
                 r = (275.0, 180, 105)
 
