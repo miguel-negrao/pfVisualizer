@@ -60,8 +60,3 @@ timerCallBack oscInstrs state = do
 
 maybeRead :: Read a => String -> Maybe a
 maybeRead = fmap fst . listToMaybe . reads
-
-
-
-
-

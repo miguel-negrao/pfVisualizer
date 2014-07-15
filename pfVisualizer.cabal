@@ -12,10 +12,11 @@ executable pfVisualizer
                    GLUT,
                    OpenGL,
                    containers,
-                   hosc ==0.13,
+                   hosc >= 0.14,
                    split,
                    random,
                    stm >= 2.4,
                    safe
+
   ghc-options:     -Wall -threaded -rtsopts
 
