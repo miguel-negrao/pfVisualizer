@@ -24,18 +24,18 @@ packageFloats g xs =
         let vts = chunksOf 3 xs
         in fmap (\[a,b,c]-> g a b c) vts
 
-datum_real_err :: Datum -> Double
-datum_real_err = fromJust . datum_double
+--datum_real_err :: Datum -> Double
+--datum_real_err = fromJust . datum_double
 
-convertDListFloat :: [Datum] -> [GLfloat]
-convertDListFloat = fmap (realToFrac . double2Float . datum_real_err)
+convertDListFloat :: [Datum] -> Maybe [GLfloat]
+convertDListFloat xs = sequence $ fmap ( (fmap (realToFrac)). datum_float ) xs
 
 parseOSCMessage :: Message -> Maybe OSCInstruction
-parseOSCMessage (Message "/triangles" xs) = Just $ NewTriangles $ chunksOf 3 $ packageFloats Vertex3 $ convertDListFloat xs
-parseOSCMessage (Message "/add_triangles" xs) = Just $ AddTriangles $ chunksOf 3 $ packageFloats Vertex3 $ convertDListFloat xs
-parseOSCMessage (Message "/colors" xs) = Just $ NewColors $ packageFloats Color3 $ convertDListFloat xs
-parseOSCMessage (Message "/points" xs) = Just $ NewPoints $ packageFloats Vertex3 $ convertDListFloat xs
-parseOSCMessage (Message "/cubes" xs) = Just $ NewCubes $ packageFloats Vertex3 $ convertDListFloat xs
+parseOSCMessage (Message "/triangles" xs) = fmap ( NewTriangles . (chunksOf 3) . (packageFloats Vertex3)) $ convertDListFloat xs
+parseOSCMessage (Message "/add_triangles" xs) = fmap ( AddTriangles. (chunksOf 3) . (packageFloats Vertex3) ) $ convertDListFloat xs
+parseOSCMessage (Message "/colors" xs) = fmap ( NewColors .( packageFloats Color3) ) $ convertDListFloat xs
+parseOSCMessage (Message "/points" xs) = fmap ( NewPoints.(packageFloats Vertex3) ) $ convertDListFloat xs
+parseOSCMessage (Message "/cubes" xs) =  fmap ( NewCubes.(packageFloats Vertex3) ) $ convertDListFloat xs
 parseOSCMessage (Message "/quit" _) = Just Quit
 parseOSCMessage _ = Nothing
 
@@ -49,7 +49,7 @@ listenOSC:: TChan OSCInstruction -> Int -> IO ()
 listenOSC chan port = tcpServer' port procPacket where
   procPacket fd = forever ( recvMessages fd >>= procMsgs )
   procMsgs = mapM_ procMsg
-  procMsg msg = fromMaybe (return ()) ((atomically . writeTChan chan) <$> parseOSCMessage msg ) -- >> print msg >> (hFlush stdout)
+  procMsg msg = fromMaybe (putStrLn $ "pfVisualizer - parse failed on "++show msg) ((atomically . writeTChan chan) <$> parseOSCMessage msg ) -- >> print msg >> (hFlush stdout)
   --I've moved to tcp to not have to deal with dropped packets.
   --t = udpServer "127.0.0.1" port
   --in withTransport t f
