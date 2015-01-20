@@ -54,7 +54,8 @@ listenOSC chan port = tcpServer' port procPacket where
   --t = udpServer "127.0.0.1" port
   --in withTransport t f
 
-
+--sendOSCExiting port = withTransport t (\fd -> sendOSC fd)
+--  where t = openUDP "127.0.0.1" 57110
 
 processOSC :: TChan OSCInstruction -> IORef PST -> IO ()
 processOSC oscInstrs progState = do
