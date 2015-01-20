@@ -16,8 +16,20 @@ import Safe
 main :: IO ()
 main = do
   (_,args) <- getArgsAndInitialize
-  let port = fromMaybe (57300::Int) (listToMaybe args >>= (\x -> maybeRead x :: Maybe Int) )
-  let labelg = fromMaybe "" $ atMay args 1
+  let
+    port = fromMaybe (57300::Int) (listToMaybe args >>= (\x -> maybeRead x :: Maybe Int) )
+    labelg = fromMaybe "" $ atMay args 1
+    init_zoom = fromMaybe 0.5 $ atMay args 2 >>= maybeRead
+    init_rotx = fromMaybe 275.0 $ atMay args 3 >>= maybeRead
+    init_roty = fromMaybe 180 $ atMay args 4 >>= maybeRead
+    init_rotz = fromMaybe 105 $ atMay args 5 >>= maybeRead
+    initialState = PST  v c r init_zoom
+        where
+                is = map (/ 12) []--[1..12]
+                v = PState.Triangles $ map (\x -> [ Vertex3 (0.1+x) 0.0 0.0, Vertex3 (0.0+x) 0.7 x, Vertex3 (0.0+x) (x-0.5) 0.0 ] ) is
+                --v = PState.Points $ map (\x ->  Vertex3 (0.1+x) 0.0 0.0 ) is
+                c = map (\x -> Color3 x 0.2 0.3) is
+                r = (init_rotx, init_roty, init_rotz)
   putStrLn ("Started pf visualizer listening on port: " ++ show port)
   hFlush stdout
   oscTChan <- startOSC port
@@ -42,15 +54,6 @@ main = do
   timerCallBack oscTChan state
   actionOnWindowClose $= MainLoopReturns
   mainLoop
-
-initialState :: PST
-initialState = PST  v c r
-        where
-                is = map (/ 12) []--[1..12]
-                v = PState.Triangles $ map (\x -> [ Vertex3 (0.1+x) 0.0 0.0, Vertex3 (0.0+x) 0.7 x, Vertex3 (0.0+x) (x-0.5) 0.0 ] ) is
-                --v = PState.Points $ map (\x ->  Vertex3 (0.1+x) 0.0 0.0 ) is
-                c = map (\x -> Color3 x 0.2 0.3) is
-                r = (275.0, 180, 105)
 
 timerCallBack :: TChan OSCInstruction -> IORef PST -> IO ()
 timerCallBack oscInstrs state = do

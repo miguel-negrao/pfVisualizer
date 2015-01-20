@@ -60,19 +60,19 @@ displayEnd = swapBuffers
 
 display1 :: HasGetter g => g PST -> IO (Geom, [Cl])
 display1 pst = do
-        --putStrLn "doing display"
-        --hFlush stdout
-        clear [ColorBuffer,DepthBuffer]
-        loadIdentity
-        let scaleFactor = 0.4
-        scale (scaleFactor::GLfloat) (-scaleFactor) scaleFactor
-        PST geo cs (xdeg, ydeg, zdeg) <- get pst
-        --print (xdeg, ydeg, zdeg)
-        --hFlush stdout
-        rotate xdeg rotx
-        rotate ydeg roty
-        rotate zdeg rotz
-        return (geo,cs)
+  PST geo cs (xdeg, ydeg, zdeg) scaleFactor <- get pst
+  --putStrLn "doing display"
+  --hFlush stdout
+  clear [ColorBuffer,DepthBuffer]
+  loadIdentity
+  --let scaleFactor = 0.4
+  scale (scaleFactor::GLfloat) (-scaleFactor) scaleFactor
+  --print (xdeg, ydeg, zdeg)
+  --hFlush stdout
+  rotate xdeg rotx
+  rotate ydeg roty
+  rotate zdeg rotz
+  return (geo,cs)
 
 
 display2 :: (Geom, [Color3 GLfloat]) -> IO ()

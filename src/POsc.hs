@@ -77,7 +77,7 @@ whites :: [Color3 GLfloat]
 whites = repeat white
 
 processOSCTris :: HasSetter s => PST -> [Tri] -> s PST -> IO ()
-processOSCTris pst@(PST _ oldColors _) tris programState = programState $= pst{ geometry = PState.Triangles tris, colors = oldColors++whites }
+processOSCTris pst@(PST _ oldColors _ _) tris programState = programState $= pst{ geometry = PState.Triangles tris, colors = oldColors++whites }
 
 processOSCInstruction:: OSCInstruction -> IORef PST -> IO()
 
@@ -88,7 +88,7 @@ processOSCInstruction (NewTriangles tris) programState = do
 processOSCInstruction (AddTriangles tris) programState = do
         pst <- get programState
         case pst of
-                PST (PState.Triangles oldTris) oldColors _ -> programState $= pst{ geometry = PState.Triangles (oldTris ++ tris), colors =  oldColors++whites }
+                PST (PState.Triangles oldTris) oldColors _ _ -> programState $= pst{ geometry = PState.Triangles (oldTris ++ tris), colors =  oldColors++whites }
                 _ ->  processOSCTris pst tris programState
 
 
@@ -97,11 +97,11 @@ processOSCInstruction (NewColors cs) programState = do
         programState $= pst{ colors = cs }
 
 processOSCInstruction (NewPoints ps) programState = do
-        pst@(PST _ oldColors _) <- get programState
+        pst@(PST _ oldColors _ _) <- get programState
         programState $= pst{ geometry = PState.Points ps, colors =  oldColors++whites }
 
 processOSCInstruction (NewCubes ps) programState = do
-        pst@(PST _ oldColors _) <- get programState
+        pst@(PST _ oldColors _ _) <- get programState
         programState $= pst{ geometry = PState.Cubes ps, colors =  oldColors++whites }
 
 processOSCInstruction Quit _ = exitSuccess

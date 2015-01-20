@@ -10,7 +10,8 @@ data Geom = Triangles [Tri] | Points [Vt] | Cubes [Vt]
 data PST = PST{
         geometry:: Geom,
         colors:: [ Cl ],
-        cameraRotation:: (GLfloat, GLfloat, GLfloat)
+        cameraRotation:: (GLfloat, GLfloat, GLfloat),
+        zoom:: GLfloat
         }
 
 
