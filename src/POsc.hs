@@ -8,7 +8,6 @@ import Control.Concurrent.STM
 import Sound.OSC.FD
 import Data.Maybe
 import Data.List.Split
-import GHC.Float
 import Graphics.Rendering.OpenGL
 import Data.IORef
 
