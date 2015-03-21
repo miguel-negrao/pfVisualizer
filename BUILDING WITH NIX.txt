@@ -1,0 +1,15 @@
+1) Install the nix package manager from https://nixos.org/nix/. This can be done by running:
+
+curl https://nixos.org/nix/install | sh
+
+2) Currently hosc doesn't build from the nixpkgs from nix-channel, you need the latest nixpkgs from github. Clone to somewhere on your harddrive.
+
+git clone https://github.com/NixOS/nixpkgs.git
+
+3) run:
+
+nix-shell -I nixpkgs=path/to/nixpkgs --option extra-binary-caches http://hydra.nixos.org --option extra-binary-caches http://hydra.cryp.to
+
+this will fetch all dependencies and start a shell with everything in place to build pfVisualizer. Then run:
+
+ghc --make -O2 src/*.hs -o pfVisualizer
