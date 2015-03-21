@@ -1,3 +1,4 @@
+
 {--
     (C)opyright 2013–2015 by Miguel Negrão
 
@@ -44,12 +45,12 @@ keyboardMouse programState (Char 'd') Down _ _ = updateAngle programState 0.0   
 keyboardMouse programState (Char 'p') Down _ _ = updateAngle programState 275.0 180 105
 keyboardMouse programState (Char 'o') Down _ _ = updateAngle programState 275.0 180 (-75)
 
-keyboardMouse programState (Char 'q') Down _ _ = addAngle programState (rotateFactor) (0.0) 0.0
-keyboardMouse programState (Char 'w') Down _ _ = addAngle programState (-rotateFactor) (0.0) 0.0
-keyboardMouse programState (Char 'a') Down _ _ = addAngle programState (0.0) (rotateFactor) 0.0
-keyboardMouse programState (Char 's') Down _ _ = addAngle programState (0.0) (-rotateFactor) 0.0
-keyboardMouse programState (Char 'z') Down _ _ = addAngle programState (0.0) (0.0) (rotateFactor)
-keyboardMouse programState (Char 'x') Down _ _ = addAngle programState (0.0) (0.0) (-rotateFactor)
+keyboardMouse programState (Char 'q') Down _ _ = addAngle programState (realToFrac rotateFactor) (0.0) 0.0
+keyboardMouse programState (Char 'w') Down _ _ = addAngle programState (realToFrac (-rotateFactor)) (0.0) 0.0
+keyboardMouse programState (Char 'a') Down _ _ = addAngle programState (0.0) (realToFrac rotateFactor) 0.0
+keyboardMouse programState (Char 's') Down _ _ = addAngle programState (0.0) (realToFrac (-rotateFactor)) 0.0
+keyboardMouse programState (Char 'z') Down _ _ = addAngle programState (0.0) (0.0) (realToFrac rotateFactor)
+keyboardMouse programState (Char 'x') Down _ _ = addAngle programState (0.0) (0.0) (realToFrac (-rotateFactor))
 
 keyboardMouse _ _ _ _ _ = return ()
 
