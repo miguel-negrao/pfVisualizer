@@ -15,7 +15,7 @@ Haskell app for opengl visualization of data via incoming osc messages
 
 Can draw triangles and cubes, nothing else.
 
-# cmdl syntax:
+# executable syntax:
 
     pfVisualizer port [label] [zoom] [rotx] [roty] [rotz]
 
