@@ -5,13 +5,14 @@ pfVisualizer is an Haskell program for opengl visualization of data via incoming
 
 # description
 
-pfVisualizer can draw triangles or cubes. Each triangle or cube can be assigned one color.n
+pfVisualizer can draw triangles or cubes. Each triangle or cube can be assigned one color.
 
 # executable syntax:
 
     pfVisualizer port [label] [zoom] [rotx] [roty] [rotz]
 
 label - string
+
 zoom, rotx, roty, rotz - floats
 
 # osc messages:
