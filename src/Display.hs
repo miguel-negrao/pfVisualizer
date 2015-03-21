@@ -1,3 +1,22 @@
+{--
+    (C)opyright 2013–2015 by Miguel Negrão
+
+    This file is part of pfVisualizer.
+
+    Foobar is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Foobar is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with pfVisualizer.  If not, see <http://www.gnu.org/licenses/>.
+--}
+
 module Display (display) where
 
 import Graphics.Rendering.OpenGL as GL
@@ -82,7 +101,7 @@ display2 (geo,cs) = renderGeom geo cs
         --cube cubeW
 
 displayBox :: IO ()
-displayBox = do        
+displayBox = do
         let x = 1.3
         preservingMatrix $ do
         color $ Color3 (1.0::GLfloat) (1.0::GLfloat) (1.0::GLfloat)
@@ -94,7 +113,7 @@ displayBox = do
         color $ Color3 (0.0::GLfloat) (1.0::GLfloat) (0.0::GLfloat)
         cubeWireFrameUp x
         --testCube
-        
+
 
 vertify3 :: [(GLfloat,GLfloat,GLfloat)] -> IO ()
 vertify3 = mapM_ (\ (a, b, c) -> vertex $ Vertex3 a b c)
@@ -144,7 +163,7 @@ renderTrigs0 tri c = do
                       {-# SCC "rgColor" #-}color c
                       let v = {-# SCC "rgVertify" #-}vertifyTri tri
                       {-# SCC "rgRenderPrimitive" #-}renderPrimitive Polygon v
-                          
+
 renderTrigs :: Color a => [Vt] -> a -> IO ()
 renderTrigs tri c = preservingMatrix $ renderTrigs0 tri c
 
@@ -155,7 +174,7 @@ renderGeom (PState.Points ps) cs = renderPrimitive GL.Points $ zipWithM_ (\p (Co
                 currentColor $= Color4 a b c 1.0
                 vertex p
          ) ps cs
-                        
+
 renderGeom (PState.Cubes ps) cs = zipWithM_ f ps cs
         where   f::Vt -> Color3 GLfloat -> IO ()
                 f (Vertex3 x y z) clr = preservingMatrix $ do
@@ -230,5 +249,3 @@ random3floats f = do
         return $ f x y z
 
 -}
-
-
