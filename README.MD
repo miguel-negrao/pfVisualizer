@@ -61,3 +61,11 @@ this will fetch all dependencies and start a shell with everything in place to b
     cabal install --only-dependencies
 
     cabal build
+
+# Compiling a working binary on OSX
+
+In order to compile a binary on OSX (10.10) that runs you need to comment out the line
+
+     actionOnWindowClose $= MainLoopReturns
+
+It uses freglut code not available in OSX which uses normal GLUT.

@@ -71,6 +71,9 @@ main = do
   idleCallback $= Just (display state)
   displayCallback $= display state
   timerCallBack oscTChan state
+  -- in order to compile a binary on OSX 10.10 that runs you need to
+  -- comment out the next line (actionOnWindowClose). It uses freglut code
+  -- not available in OSX which uses normal GLUT.
   actionOnWindowClose $= MainLoopReturns
   mainLoop
 
