@@ -75,7 +75,7 @@ listenOSC chan port = tcpServer' port procPacket where
 --sendOSCExiting port = withTransport t (\fd -> sendOSC fd)
 --  where t = openUDP "127.0.0.1" 57110
 
-processOSC :: TChan OSCInstruction -> IORef PST -> IO ()
+processOSC :: TChan OSCInstruction -> IORef PST -> IO () 
 processOSC oscInstrs progState = do
         --print "checking for incoming osc:"
         --hFlush stdout
@@ -94,7 +94,7 @@ white = Color3 (1.0::GLfloat) 1.0 1.0
 whites :: [Color3 GLfloat]
 whites = repeat white
 
-processOSCTris :: HasSetter s => PST -> [Tri] -> s PST -> IO ()
+processOSCTris :: PST -> [Tri] -> IORef PST -> IO ()
 processOSCTris pst@(PST _ oldColors _ _) tris programState = programState $= pst{ geometry = PState.Triangles tris, colors = oldColors++whites }
 
 processOSCInstruction:: OSCInstruction -> IORef PST -> IO()

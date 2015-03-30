@@ -1,4 +1,3 @@
-
 {--
     (C)opyright 2013–2015 by Miguel Negrão
 
@@ -23,9 +22,11 @@ module Bindings (display,reshape,keyboardMouse,mouseMotion) where
 import Graphics.Rendering.OpenGL
 import Graphics.UI.GLUT
 import Foreign.C.Types (CFloat)
+import Data.IORef
 
 import Display
 import PState
+
 
 reshape :: Size -> IO ()
 reshape (Size w h) = viewport $= (Position 0 0,  Size minWH minWH) where
@@ -34,7 +35,7 @@ reshape (Size w h) = viewport $= (Position 0 0,  Size minWH minWH) where
 rotateFactor :: CFloat
 rotateFactor = 5.0
 
-keyboardMouse :: (HasSetter s, HasGetter s) => s PST -> Key -> KeyState -> t -> t1 -> IO ()
+keyboardMouse :: IORef PST -> KeyboardMouseCallback
 keyboardMouse programState (Char 'f') Down _ _ = updateAngle programState 270.0 180 90
 keyboardMouse programState (Char 'b') Down _ _ = updateAngle programState 270.0 180.0 (-90.0)
 keyboardMouse programState (Char 'l') Down _ _ = updateAngle programState 90.0 0.0 180.0
@@ -54,25 +55,24 @@ keyboardMouse programState (Char 'x') Down _ _ = addAngle programState (0.0) (0.
 
 keyboardMouse _ _ _ _ _ = return ()
 
-updateAngle :: (HasSetter s, HasGetter s) => s PST -> GLfloat -> GLfloat -> GLfloat -> IO ()
+updateAngle :: IORef PST -> GLfloat -> GLfloat -> GLfloat -> IO ()
 updateAngle programState angleX angleY angleZ = do
         pst <- get programState
         programState $= pst{ cameraRotation = (angleX, angleY, angleZ) }
 
-
-addAngle :: (HasSetter s, HasGetter s) => s PST -> GLfloat -> GLfloat -> GLfloat -> IO ()
+addAngle :: IORef PST -> GLfloat -> GLfloat -> GLfloat -> IO ()
 addAngle programState angleX angleY angleZ = do
         pst <- get programState
         let (x,y,z) = cameraRotation pst
         programState $= pst{ cameraRotation = (angleX+x, angleY+y, angleZ+z) }
 
 
-mouseMotion :: (HasSetter s, HasGetter s) => s PST -> Position -> IO ()
+mouseMotion :: IORef PST  -> Position -> IO ()
 mouseMotion programState (Position dx dy) = do
         pst <- get programState
         let
                 angx = (fromIntegral dx / 500-0.5)*360
                 angy = (fromIntegral dy / 500-0.5)*360
         programState $= pst{ cameraRotation = (270+angy,180,90.0+angx) }
-       -- putStrLn $ "mousehahah" ++ (show (dx,dy))
+       -- putStrLn $ "mouse" ++ (show (dx,dy))
        -- hFlush stdout

@@ -21,6 +21,7 @@ module Display (display) where
 
 import Graphics.Rendering.OpenGL as GL
 import Graphics.UI.GLUT
+import Data.IORef
 
 import PState
 import Control.Monad (zipWithM_)
@@ -67,7 +68,7 @@ rotz = Vector3 (0.0::GLfloat) 0.0 1.0
         swapBuffers
 --}
 
-display :: HasGetter g => g PST -> IO ()
+display :: IORef PST -> IO ()
 display pst = do
   a <- display1 pst
   display2 a
@@ -77,7 +78,7 @@ display pst = do
 displayEnd :: IO ()
 displayEnd = swapBuffers
 
-display1 :: HasGetter g => g PST -> IO (Geom, [Cl])
+display1 :: IORef PST -> IO (Geom, [Cl])
 display1 pst = do
   PST geo cs (xdeg, ydeg, zdeg) scaleFactor <- get pst
   --putStrLn "doing display"
