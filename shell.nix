@@ -5,7 +5,7 @@ let pkg = haskellngPackages.callPackage
              }:
              mkDerivation {
                pname = "pfVisualizer";
-               version = "0.1";
+               version = "0.1.0.0";
                src = ./.;
                isLibrary = false;
                isExecutable = true;
