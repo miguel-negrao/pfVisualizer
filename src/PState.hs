@@ -30,5 +30,6 @@ data PST = PST{
         geometry:: Geom,
         colors:: [ Cl ],
         cameraRotation:: (GLfloat, GLfloat, GLfloat),
-        zoom:: GLfloat
+        zoom:: GLfloat,
+        endProgram :: Bool
         }

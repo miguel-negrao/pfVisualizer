@@ -21,7 +21,8 @@ module Display (display) where
 
 import Graphics.Rendering.OpenGL as GL
 import Graphics.UI.GLUT
-import Data.IORef
+import Control.Concurrent.STM.TVar
+import Control.Concurrent.STM
 
 import PState
 import Control.Monad (zipWithM_)
@@ -33,43 +34,9 @@ roty = Vector3 (0.0::GLfloat) 1.0 0.0
 rotz :: Vector3 GLfloat
 rotz = Vector3 (0.0::GLfloat) 0.0 1.0
 
-{--display pst = do
-        --putStrLn "doing display"
-        --hFlush stdout
-        clear [ColorBuffer,DepthBuffer]
-        loadIdentity
-        let scaleFactor = 0.4
-        scale (scaleFactor::GLfloat) (-scaleFactor) scaleFactor
-        PST geo cs (xdeg, ydeg, zdeg) <- get pst
-        --print (xdeg, ydeg, zdeg)
-        --hFlush stdout
-        rotate xdeg rotx
-        rotate ydeg roty
-        rotate zdeg rotz
-        --need to invert the y coordinate in scale because for some reason opengl
-        --used a left-handed coordinate system, i.e., y is flipped from
-        --what you would expect
-        --pointSize $= 4
-        {-# SCC "renderGeomMe" #-}renderGeom geo cs
-        --let cubeW = (0.5::GLfloat)
-        --color $ Color3 (1.0::GLfloat) (0.0::GLfloat) (0.0::GLfloat)
-        --cube cubeW
-        let x = 1.3
-        preservingMatrix $ do
-        color $ Color3 (1.0::GLfloat) (1.0::GLfloat) (1.0::GLfloat)
-        {-# SCC "cubeWireFrameRestMe" #-}cubeWireFrameRest x
-        preservingMatrix $ do
-        color $ Color3 (1.0::GLfloat) (0.0::GLfloat) (0.0::GLfloat)
-        cubeWireFrameFront x
-        preservingMatrix $ do
-        color $ Color3 (0.0::GLfloat) (1.0::GLfloat) (0.0::GLfloat)
-        cubeWireFrameUp x
-        --testCube
-        swapBuffers
---}
-
-display :: IORef PST -> IO ()
-display pst = do
+display :: TVar PST -> IO ()
+display state = do
+  pst <- atomically $ readTVar state 
   a <- display1 pst
   display2 a
   displayBox
@@ -78,9 +45,8 @@ display pst = do
 displayEnd :: IO ()
 displayEnd = swapBuffers
 
-display1 :: IORef PST -> IO (Geom, [Cl])
-display1 pst = do
-  PST geo cs (xdeg, ydeg, zdeg) scaleFactor <- get pst
+display1 :: PST -> IO (Geom, [Cl])
+display1 (PST geo cs (xdeg, ydeg, zdeg) scaleFactor _) = do
   --putStrLn "doing display"
   --hFlush stdout
   clear [ColorBuffer,DepthBuffer]

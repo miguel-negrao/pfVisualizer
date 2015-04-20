@@ -17,22 +17,16 @@
     along with pfVisualizer.  If not, see <http://www.gnu.org/licenses/>.
 --}
 
-module POsc(testOSC, listenOSC, OSCInstruction (..), processOSC, startOSC ) where
+module POsc(OSCInstruction (..), startOSC ) where
 
-import System.IO
 import Control.Monad
-import Control.Applicative
-import Control.Concurrent
 import Control.Concurrent.STM
 import Sound.OSC.FD
-import Data.Maybe
 import Data.List.Split
 import Graphics.Rendering.OpenGL
-import Data.IORef
 
 import PState
-import Display
-import System.Exit (exitSuccess)
+
 
 data OSCInstruction = NewTriangles [ Tri ] | AddTriangles [ Tri ] | NewColors [ Cl ] | NewPoints [Vt] |  NewCubes [Vt] | Quit
         deriving Show
@@ -57,103 +51,39 @@ parseOSCMessage (Message "/cubes" xs) =  fmap ( NewCubes.(packageFloats Vertex3)
 parseOSCMessage (Message "/quit" _) = Just Quit
 parseOSCMessage _ = Nothing
 
-startOSC :: Int -> IO (TChan OSCInstruction)
-startOSC port = do
-        oscInstrs <- atomically newTChan
-        _ <- forkIO $ listenOSC oscInstrs port
-        return oscInstrs
-
-listenOSC:: TChan OSCInstruction -> Int -> IO ()
-listenOSC chan port = tcpServer' port procPacket where
-  procPacket fd = forever ( recvMessages fd >>= procMsgs )
-  procMsgs = mapM_ procMsg
-  procMsg msg = fromMaybe (putStrLn $ "pfVisualizer - parse failed on "++show msg) ((atomically . writeTChan chan) <$> parseOSCMessage msg ) -- >> print msg >> (hFlush stdout)
-  --I've moved to tcp to not have to deal with dropped packets.
-  --t = udpServer "127.0.0.1" port
-  --in withTransport t f
-
---sendOSCExiting port = withTransport t (\fd -> sendOSC fd)
---  where t = openUDP "127.0.0.1" 57110
-
-processOSC :: TChan OSCInstruction -> IORef PST -> IO () 
-processOSC oscInstrs progState = do
-        --print "checking for incoming osc:"
-        --hFlush stdout
-        b <- atomically $ tryReadTChan oscInstrs
-        let g x = do
-                processOSCInstruction x progState
-                --print x
-                --hFlush stdout
-                display progState
-        maybe (return ()) g b
-
-
 white :: Color3 GLfloat
 white = Color3 (1.0::GLfloat) 1.0 1.0
 
 whites :: [Color3 GLfloat]
 whites = repeat white
 
-processOSCTris :: PST -> [Tri] -> IORef PST -> IO ()
-processOSCTris pst@(PST _ oldColors _ _) tris programState = programState $= pst{ geometry = PState.Triangles tris, colors = oldColors++whites }
+processOSCTris :: PST -> [Tri] -> PST
+processOSCTris pst@(PST _ oldColors _ _ _) tris = pst{ geometry = PState.Triangles tris, colors = oldColors++whites }
 
-processOSCInstruction:: OSCInstruction -> IORef PST -> IO()
+processOSCInstruction:: OSCInstruction -> PST -> PST
+processOSCInstruction (NewTriangles tris) pst = processOSCTris pst tris
+processOSCInstruction (AddTriangles tris) pst@(PST (PState.Triangles oldTris) oldColors _ _ _) = pst{ geometry = newGeometry, colors = newColors } where
+  newGeometry = PState.Triangles (oldTris ++ tris)
+  newColors =  oldColors++whites
+processOSCInstruction (AddTriangles tris) pst =  processOSCTris pst tris
+processOSCInstruction (NewColors cs) pst = pst{ colors = cs }
+processOSCInstruction (NewPoints ps) pst@(PST _ oldColors _ _ _) =pst{ geometry = PState.Points ps, colors =  oldColors++whites }
+processOSCInstruction (NewCubes ps) pst@(PST _ oldColors _ _ _) = pst{ geometry = PState.Cubes ps, colors =  oldColors++whites }
+processOSCInstruction Quit pst = pst{ endProgram = True } 
 
-processOSCInstruction (NewTriangles tris) programState = do
-        pst <- get programState
-        processOSCTris pst tris programState
-
-processOSCInstruction (AddTriangles tris) programState = do
-        pst <- get programState
-        case pst of
-                PST (PState.Triangles oldTris) oldColors _ _ -> programState $= pst{ geometry = PState.Triangles (oldTris ++ tris), colors =  oldColors++whites }
-                _ ->  processOSCTris pst tris programState
-
-
-processOSCInstruction (NewColors cs) programState = do
-        pst <- get programState
-        programState $= pst{ colors = cs }
-
-processOSCInstruction (NewPoints ps) programState = do
-        pst@(PST _ oldColors _ _) <- get programState
-        programState $= pst{ geometry = PState.Points ps, colors =  oldColors++whites }
-
-processOSCInstruction (NewCubes ps) programState = do
-        pst@(PST _ oldColors _ _) <- get programState
-        programState $= pst{ geometry = PState.Cubes ps, colors =  oldColors++whites }
-
-processOSCInstruction Quit _ = exitSuccess
-
---Not working
-{--
-withTimeout :: Int -> STM a -> IO (Maybe a)
-withTimeout time fun = do
-        mv <- atomically newEmptyTMVar
-        tid <- forkIO $ do
-                threadDelay time
-                atomically (putTMVar mv ())
-        x <- atomically (fmap Just fun `orElse` (takeTMVar mv >> return Nothing))
-        killThread tid
-        return x
---}
-
---TESTING
-
-testOSC :: IO b
-testOSC = do
-        aseq <- atomically newTChan
-        print "testing osc"
-        _ <- forkIO $ listenOSC aseq 57300
-        loop aseq
-
-loop :: Show a => TChan a -> IO b
-loop aseq = forever $ do
-        b <- atomically $ readTChan aseq
-        print b
-        hFlush stdout
-        --print "waiting"
-        --hFlush stdout
-
+startOSC :: TVar Bool -> TVar PST -> Int -> IO ()
+startOSC oscUpdateTVar state port = do
+  let
+    procPacket fd = forever (recvMessages fd >>= procMsgs)
+    procMsgs = mapM_ procMsg
+    procMsg msg = case parseOSCMessage msg of
+      Nothing -> putStrLn $ "pfVisualizer - parse failed on " ++ show msg
+      Just inst -> do
+         --print inst >> hFlush stdout
+         atomically $ do
+           modifyTVar state $ processOSCInstruction inst
+           writeTVar oscUpdateTVar True
+  tcpServer' port procPacket
 
 
 {-
