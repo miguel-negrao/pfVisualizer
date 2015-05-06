@@ -1,3 +1,5 @@
+{-# LANGUAGE TemplateHaskell, Rank2Types #-}
+
 {--
     (C)opyright 2013–2015 by Miguel Negrão
 
@@ -19,6 +21,8 @@
 
 module Main where
 
+import System.Console.GetOpt --part of base
+import System.Exit (exitSuccess)
 import Graphics.Rendering.OpenGL
 import Graphics.UI.GLUT
 import Control.Concurrent.STM
@@ -28,34 +32,84 @@ import Control.Monad
 import Bindings
 import PState
 import POsc
-import Safe
+import Control.Lens
 import Control.Concurrent
+import Foreign.C.Types (CFloat, CInt)
 
 -- currently using 20% of one corei7 core 2GHz from 2011 when drawing at 10Hz
+
+data Options = Options
+               { _port           :: Int
+               , _label          :: String
+               , _opZoom         :: CFloat
+               , _rotX           :: CFloat
+               , _rotY           :: CFloat
+               , _rotZ           :: CFloat
+               , _winW           :: CInt
+               , _winH           :: CInt
+               , _displayHelp    :: Bool
+               } deriving Show
+
+makeLenses ''Options
+
+defaultOptions :: Options
+defaultOptions  = Options
+    { _port           = 57300
+    , _label          = ""
+    , _opZoom         = 1.0
+    , _rotX           = 275.0
+    , _rotY           = 180
+    , _rotZ           = 105
+    , _winW           = 500
+    , _winH           = 500
+    , _displayHelp    = False                
+    }
+
+f :: Read b => Lens' Options b -> String -> Options -> Options
+f arg = (\x opts -> maybe opts (\y -> set arg y opts) (maybeRead x) )
+
+options :: [OptDescr (Options -> Options)]
+options =
+     [ Option "p"        ["port"]   (ReqArg (f port)   "PORT"   )    "TCP port",
+       Option "l"        ["label"]  (ReqArg (set label)"LABEL"  )    "label",
+       Option "o"        ["zoom"]   (ReqArg (f opZoom) "ZOOM"   )    "zoom factor",
+       Option "x"        ["rotX"]   (ReqArg (f rotX)   "RADIANS")    "rotation around x axis",
+       Option "y"        ["rotY"]   (ReqArg (f rotY)   "RADIANS")    "rotation around y axis",
+       Option "z"        ["rotZ"]   (ReqArg (f rotZ)   "RADIANS")    "rotation around z axis",
+       Option "w"        ["width"]  (ReqArg (f winW)   "PIXELS" )    "window width",
+       Option "h"        ["height"] (ReqArg (f winH)   "PIXELS" )    "window height",
+       Option ""         ["help"]   (NoArg  (set displayHelp True))   "show this help"
+     ]
+
+processArgs :: [String] -> Options
+processArgs args = case getOpt RequireOrder options args of
+    (flags, [],      [])     -> foldl (flip id) defaultOptions flags
+    (_,     nonOpts, [])     -> error $ "unrecognized arguments: " ++ unwords nonOpts
+    (_,     _,       msgs)   -> error $ concat msgs ++ usageInfo "Usage: pfVisualizer [OPTION...]" options
+
 
 main :: IO ()
 main = do
   (_,args) <- getArgsAndInitialize
   let
-    port = fromMaybe (57300::Int) (listToMaybe args >>= (\x -> maybeRead x :: Maybe Int) )
-    labelg = fromMaybe "" $ atMay args 1
-    init_zoom = fromMaybe 0.5 $ atMay args 2 >>= maybeRead
-    init_rotx = fromMaybe 275.0 $ atMay args 3 >>= maybeRead
-    init_roty = fromMaybe 180 $ atMay args 4 >>= maybeRead
-    init_rotz = fromMaybe 105 $ atMay args 5 >>= maybeRead
+    Options _port _label _opZoom _rotX _rotY _rotZ _winW _winH _displayHelp = processArgs args
     p s = putStrLn s >> hFlush stdout
-    initialState = PST  v c r init_zoom False
-        where
-                is = map (/ 12) []--[1..12]
-                v = PState.Triangles $ map (\x -> [ Vertex3 (0.1+x) 0.0 0.0, Vertex3 (0.0+x) 0.7 x, Vertex3 (0.0+x) (x-0.5) 0.0 ] ) is
-                --v = PState.Points $ map (\x ->  Vertex3 (0.1+x) 0.0 0.0 ) is
-                c = map (\x -> Color3 x 0.2 0.3) is
-                r = (init_rotx, init_roty, init_rotz)
+    is = map (/ 12) []--[1..12]
+    v = PState.Triangles $ map (\x -> [ Vertex3 (0.1+x) 0.0 0.0, Vertex3 (0.0+x) 0.7 x, Vertex3 (0.0+x) (x-0.5) 0.0 ] ) is
+    --v = PState.Points $ map (\x ->  Vertex3 (0.1+x) 0.0 0.0 ) is
+    c = map (\x -> Color3 x 0.2 0.3) is
+    r = (_rotX, _rotY, _rotZ)
+    initialState = PST  v c r (_opZoom) False
+  --print (args,o)
+  --exitSuccess
+  when _displayHelp $ do
+    putStrLn $ usageInfo "Usage: pfVisualizer [OPTION...]" options
+    exitSuccess
   state <- newTVarIO initialState
   oscUpdateTVar <- newTVarIO False
-  _ <- forkIO $ startOSC oscUpdateTVar state port
-  window <- createWindow $ labelg
-  initialWindowSize $= Size 500 500
+  _ <- forkIO $ startOSC oscUpdateTVar state $ _port
+  initialWindowSize $= Size _winW _winH
+  window <- createWindow $ _label
   initialDisplayCapabilities $= [ With  DisplayRGB,
         Where DisplayDepth IsAtLeast 16,
         With  DisplaySamples,
@@ -65,12 +119,13 @@ main = do
 --  ambient (Light 0) $= Color4 0.1 0.1 0.1 1.0
 --  diffuse (Light 0) $= Color4 0.9 0.9 0.9 1.0
 --  light (Light 0) $= Enabled
-  --reshapeCallback $= Just reshape
+  reshapeCallback $= Just reshape
   depthFunc $= Just Less -- specifies comparison function for DepthBuffer
   keyboardMouseCallback $= Just (keyboardMouseWithUpdate window state)
   motionCallback $= Just (mouseMotion window state)
   displayCallback $= display state
   let checkOSCMessages = do
+        --check OSC messages every 33 miliseconds = 30FPS
         threadDelay (1000 * 33)
         b <- atomically $ do
           b <- readTVar oscUpdateTVar
@@ -88,16 +143,23 @@ main = do
   -- comment out the next line (actionOnWindowClose). It uses freglut code
   -- not available in OSX which uses normal GLUT.
   actionOnWindowClose $= MainLoopReturns
-  p ("Started pf visualizer listening on port: " ++ show port)
+  p ("Started pfVisualizer listening on port: " ++ show _port)
   mainLoop
-  p ("Exiting pf visualizer listening on port: " ++ show port)
+  p ("Exiting pfVisualizer listening on port: " ++ show _port)
 
+reshape :: Size -> IO ()
+reshape (Size w h) = viewport $= (Position 0 0,  Size minWH minWH) where
+        minWH = min w h
+  
 --just redraw continually, wastes cpu
+--don't use this
 timerCallBack :: Window -> IO ()
 timerCallBack w = do
   postRedisplay $ Just w
   addTimerCallback 30 (timerCallBack w)
 
+readOr:: Read a => a -> String -> a
+readOr def = fromMaybe def . maybeRead
 
 maybeRead :: Read a => String -> Maybe a
 maybeRead = fmap fst . listToMaybe . reads

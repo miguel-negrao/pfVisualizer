@@ -9,11 +9,20 @@ pfVisualizer can draw triangles or cubes. Each triangle or cube can be assigned 
 
 # executable syntax:
 
-    pfVisualizer port [label] [zoom] [rotx] [roty] [rotz]
+Usage: pfVisualizer [OPTION...]
+  -p PORT     --port=PORT      TCP port
+  -l LABEL    --label=LABEL    label
+  -o ZOOM     --zoom=ZOOM      zoom factor
+  -x RADIANS  --rotX=RADIANS   rotation around x axis
+  -y RADIANS  --rotY=RADIANS   rotation around y axis
+  -z RADIANS  --rotZ=RADIANS   rotation around z axis
+  -w PIXELS   --width=PIXELS   window width
+  -h PIXELS   --height=PIXELS  window height
+              --help           show this help
 
-label - string
-
-zoom, rotx, roty, rotz - floats
+label                  - string
+zoom, rotx, roty, rotz - float
+port,w,h               - int
 
 # osc messages:
 
@@ -40,7 +49,7 @@ If before you sent a /cubes message then the number of floats passed to /colors 
 
     curl https://nixos.org/nix/install | sh
 
-2) Currently hosc doesn't build from the nixpkgs from nix-channel, you need the latest nixpkgs from github. Clone to somewhere on your harddrive.
+2) Currently hosc doesn't build from the nixpkgs from nix-channel, you need the latest nixpkgs from github. Clone to somewhere on your harddrive (commit d6cd4c57dc6a3cae3a3675fea38a7d564babdd7e known to work).
 
     git clone https://github.com/NixOS/nixpkgs.git
 

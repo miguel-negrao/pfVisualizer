@@ -17,7 +17,7 @@
     along with pfVisualizer.  If not, see <http://www.gnu.org/licenses/>.
 --}
 
-module Bindings (display,reshape,keyboardMouse,mouseMotion,keyboardMouseWithUpdate) where
+module Bindings (display,keyboardMouse,mouseMotion,keyboardMouseWithUpdate) where
 
 import Graphics.Rendering.OpenGL
 import Graphics.UI.GLUT
@@ -26,11 +26,6 @@ import Control.Concurrent.STM
 
 import Display
 import PState
-
-
-reshape :: Size -> IO ()
-reshape (Size w h) = viewport $= (Position 0 0,  Size minWH minWH) where
-        minWH = min w h
 
 rotateFactor :: CFloat
 rotateFactor = 5.0

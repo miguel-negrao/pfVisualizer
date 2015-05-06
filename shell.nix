@@ -1,7 +1,7 @@
 with (import <nixpkgs> {}).pkgs;
 let pkg = haskellngPackages.callPackage
             ({ mkDerivation, base, containers, GLUT, hosc, OpenGL, random, safe
-             , split, stdenv, stm
+             , split, stdenv, stm, lens, ghc-mod
              }:
              mkDerivation {
                pname = "pfVisualizer";
@@ -10,8 +10,9 @@ let pkg = haskellngPackages.callPackage
                isLibrary = false;
                isExecutable = true;
                buildDepends = [
-                 base containers GLUT hosc OpenGL random safe split stm
+                 base containers GLUT hosc OpenGL random safe split stm lens
                ];
+               buildTools =  [ghc-mod];
                license = stdenv.lib.licenses.gpl3;
              }) {};
 in
