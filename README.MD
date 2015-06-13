@@ -55,11 +55,9 @@ If before you sent a /cubes message then the number of floats passed to /colors 
 
 3) run:
 
-    nix-shell -I nixpkgs=path/to/nixpkgs --option extra-binary-caches http://hydra.nixos.org --option extra-binary-caches http://hydra.cryp.to
+    nix-build -I nixpkgs=path/to/nixpkgs --option extra-binary-caches http://hydra.nixos.org --option extra-binary-caches http://hydra.cryp.to build.nix
 
-this will fetch all dependencies and start a shell with everything in place to build pfVisualizer. Then run:
-
-    ghc --make -O2 src/*.hs -o pfVisualizer
+this will fetch all dependencies build the application which will appear as the file "result" in this directory.
 
 # Install with cabal
 
