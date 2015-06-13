@@ -1,5 +1,5 @@
 name:           pfVisualizer
-version:        0.1.0.0
+version:        0.1.0.1
 cabal-version:  >= 1.2
 build-type:     Simple
 author:         Miguel Negrao
@@ -16,7 +16,7 @@ executable pfVisualizer
                    split,
                    random,
                    stm >= 2.4,
-                   safe
+                   safe,
+                   lens
 
   ghc-options:     -Wall -threaded -rtsopts
-
