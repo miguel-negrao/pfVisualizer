@@ -1,3 +1,4 @@
+{-# LANGUAGE TemplateHaskell #-}
 {--
     (C)opyright 2013–2015 by Miguel Negrão
 
@@ -19,6 +20,7 @@
 
 module PState where
 
+import Control.Lens
 import Graphics.Rendering.OpenGL
 
 type Vt = Vertex3 GLfloat
@@ -27,9 +29,11 @@ type Tri = [Vt]
 data Geom = Triangles [Tri] | Points [Vt] | Cubes [Vt]
 
 data PST = PST{
-        geometry:: Geom,
-        colors:: [ Cl ],
-        cameraRotation:: (GLfloat, GLfloat, GLfloat),
-        zoom:: GLfloat,
-        endProgram :: Bool
+        _geometry:: Geom,
+        _colors:: [ Cl ],
+        _cameraRotation:: (GLfloat, GLfloat, GLfloat),
+        _zoom:: GLfloat,
+        _endProgram :: Bool
         }
+
+makeLenses ''PST

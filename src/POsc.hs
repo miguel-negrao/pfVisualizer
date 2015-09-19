@@ -26,6 +26,7 @@ import Data.List.Split
 import Graphics.Rendering.OpenGL
 
 import PState
+import Control.Lens
 
 
 data OSCInstruction = NewTriangles [ Tri ] | AddTriangles [ Tri ] | NewColors [ Cl ] | NewPoints [Vt] |  NewCubes [Vt] | Quit
@@ -58,18 +59,18 @@ whites :: [Color3 GLfloat]
 whites = repeat white
 
 processOSCTris :: PST -> [Tri] -> PST
-processOSCTris pst@(PST _ oldColors _ _ _) tris = pst{ geometry = PState.Triangles tris, colors = oldColors++whites }
-
+processOSCTris pst@(PST _ oldColors _ _ _) tris = pst{ _geometry = PState.Triangles tris, _colors = oldColors++whites }
+  
 processOSCInstruction:: OSCInstruction -> PST -> PST
 processOSCInstruction (NewTriangles tris) pst = processOSCTris pst tris
-processOSCInstruction (AddTriangles tris) pst@(PST (PState.Triangles oldTris) oldColors _ _ _) = pst{ geometry = newGeometry, colors = newColors } where
+processOSCInstruction (AddTriangles tris) pst@(PST (PState.Triangles oldTris) oldColors _ _ _) = pst{ _geometry = newGeometry, _colors = newColors } where
   newGeometry = PState.Triangles (oldTris ++ tris)
   newColors =  oldColors++whites
 processOSCInstruction (AddTriangles tris) pst =  processOSCTris pst tris
-processOSCInstruction (NewColors cs) pst = pst{ colors = cs }
-processOSCInstruction (NewPoints ps) pst@(PST _ oldColors _ _ _) =pst{ geometry = PState.Points ps, colors =  oldColors++whites }
-processOSCInstruction (NewCubes ps) pst@(PST _ oldColors _ _ _) = pst{ geometry = PState.Cubes ps, colors =  oldColors++whites }
-processOSCInstruction Quit pst = pst{ endProgram = True } 
+processOSCInstruction (NewColors cs) pst = set colors cs pst
+processOSCInstruction (NewPoints ps) pst@(PST _ oldColors _ _ _) =pst{ _geometry = PState.Points ps, _colors =  oldColors++whites }
+processOSCInstruction (NewCubes ps) pst@(PST _ oldColors _ _ _) = pst{ _geometry = PState.Cubes ps, _colors =  oldColors++whites }
+processOSCInstruction Quit pst = pst{ _endProgram = True } 
 
 startOSC :: TVar Bool -> TVar PST -> Int -> IO ()
 startOSC oscUpdateTVar state port = do

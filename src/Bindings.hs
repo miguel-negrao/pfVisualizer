@@ -23,6 +23,7 @@ import Graphics.Rendering.OpenGL
 import Graphics.UI.GLUT
 import Foreign.C.Types (CFloat)
 import Control.Concurrent.STM
+import Control.Lens
 
 import Display
 import PState
@@ -53,30 +54,26 @@ keyboardMouse programState (Char 's') Down _ _ = addAngle programState (0.0) (re
 keyboardMouse programState (Char 'z') Down _ _ = addAngle programState (0.0) (0.0) (realToFrac rotateFactor)
 keyboardMouse programState (Char 'x') Down _ _ = addAngle programState (0.0) (0.0) (realToFrac (-rotateFactor))
 
+keyboardMouse programState (Char '+') Down _ _ = updatePST programState $ over PState.zoom (+ 0.1)
+keyboardMouse programState (Char '-') Down _ _ = updatePST programState $ over PState.zoom (+ (-0.1))
+
 keyboardMouse _ _ _ _ _ = return ()
 
 updateAngle :: TVar PST -> GLfloat -> GLfloat -> GLfloat -> IO ()
-updateAngle programState angleX angleY angleZ = do
-  pst <- atomically $ readTVar programState
-  atomically $ writeTVar programState pst{ cameraRotation = (angleX, angleY, angleZ) }
-  
+updateAngle tpst angleX angleY angleZ = updatePST tpst $ set cameraRotation (angleX, angleY, angleZ)
 
 addAngle :: TVar PST -> GLfloat -> GLfloat -> GLfloat -> IO ()
-addAngle programState angleX angleY angleZ = atomically $ do
-        pst <- readTVar programState
-        let (x,y,z) = cameraRotation pst
-        writeTVar programState pst{ cameraRotation = (angleX+x, angleY+y, angleZ+z) }
+addAngle tpst angleX angleY angleZ = updatePST tpst $ over cameraRotation (\(x,y,z) -> (angleX+x, angleY+y, angleZ+z) )
 
+updatePST :: TVar PST -> (PST -> PST) -> IO ()
+updatePST tpst f = atomically $ modifyTVar tpst f
 
 mouseMotion :: Window -> TVar PST  -> Position -> IO ()
-mouseMotion w s (Position dx dy) = do
-        atomically $ do
-          pst <- readTVar s
-          let
-            angx = (fromIntegral dx / 500-0.5)*360
-            angy = (fromIntegral dy / 500-0.5)*360
-          writeTVar s pst{ cameraRotation = (270+angy,180,90.0+angx) }
-        postRedisplay $ Just w  
-
-        -- putStrLn $ "mouse" ++ (show (dx,dy))
-       -- hFlush stdout
+mouseMotion w tpst (Position dx dy) = do
+  let
+    angx = (fromIntegral dx / 500-0.5)*360
+    angy = (fromIntegral dy / 500-0.5)*360
+  updateAngle tpst (270+angy) 180 (90.0+angx)
+  postRedisplay $ Just w
+  -- putStrLn $ "mouse" ++ (show (dx,dy))
+  -- hFlush stdout
