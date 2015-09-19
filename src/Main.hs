@@ -23,8 +23,8 @@ module Main where
 
 import System.Console.GetOpt --part of base
 import System.Exit (exitSuccess)
-import Graphics.Rendering.OpenGL
-import Graphics.UI.GLUT
+import Graphics.Rendering.OpenGL hiding (set)
+import Graphics.UI.GLUT hiding (set)
 import Control.Concurrent.STM
 import System.IO
 import Data.Maybe
@@ -98,8 +98,8 @@ main = do
     v = PState.Triangles $ map (\x -> [ Vertex3 (0.1+x) 0.0 0.0, Vertex3 (0.0+x) 0.7 x, Vertex3 (0.0+x) (x-0.5) 0.0 ] ) is
     --v = PState.Points $ map (\x ->  Vertex3 (0.1+x) 0.0 0.0 ) is
     c = map (\x -> Color3 x 0.2 0.3) is
-    r = (_rotX, _rotY, _rotZ)
-    initialState = PST  v c r (_opZoom) False
+    r = (realToFrac _rotX, realToFrac _rotY, realToFrac _rotZ)
+    initialState = PST  v c r (realToFrac _opZoom) False
   --print (args,o)
   --exitSuccess
   when _displayHelp $ do
@@ -108,7 +108,7 @@ main = do
   state <- newTVarIO initialState
   oscUpdateTVar <- newTVarIO False
   _ <- forkIO $ startOSC oscUpdateTVar state $ _port
-  initialWindowSize $= Size _winW _winH
+  initialWindowSize $= Size (fromIntegral _winW) (fromIntegral _winH)
   window <- createWindow $ _label
   initialDisplayCapabilities $= [ With  DisplayRGB,
         Where DisplayDepth IsAtLeast 16,

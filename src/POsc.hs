@@ -23,7 +23,7 @@ import Control.Monad
 import Control.Concurrent.STM
 import Sound.OSC.FD
 import Data.List.Split
-import Graphics.Rendering.OpenGL
+import Graphics.Rendering.OpenGL hiding (set)
 
 import PState
 import Control.Lens

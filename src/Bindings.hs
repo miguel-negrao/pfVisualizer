@@ -19,8 +19,8 @@
 
 module Bindings (display,keyboardMouse,mouseMotion,keyboardMouseWithUpdate) where
 
-import Graphics.Rendering.OpenGL
-import Graphics.UI.GLUT
+import Graphics.Rendering.OpenGL hiding (set)
+import Graphics.UI.GLUT hiding (set)
 import Foreign.C.Types (CFloat)
 import Control.Concurrent.STM
 import Control.Lens
