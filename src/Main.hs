@@ -62,11 +62,11 @@ defaultOptions  = Options
     , _rotZ           = 105
     , _winW           = 500
     , _winH           = 500
-    , _displayHelp    = False                
+    , _displayHelp    = False
     }
 
 f :: Read b => Lens' Options b -> String -> Options -> Options
-f arg = (\x opts -> maybe opts (\y -> set arg y opts) (maybeRead x) )
+f arg x opts = maybe opts (\y -> set arg y opts) (maybeRead x)
 
 options :: [OptDescr (Options -> Options)]
 options =
@@ -107,9 +107,9 @@ main = do
     exitSuccess
   state <- newTVarIO initialState
   oscUpdateTVar <- newTVarIO False
-  _ <- forkIO $ startOSC oscUpdateTVar state $ _port
+  _ <- forkIO $ startOSC oscUpdateTVar state  _port
   initialWindowSize $= Size (fromIntegral _winW) (fromIntegral _winH)
-  window <- createWindow $ _label
+  window <- createWindow  _label
   initialDisplayCapabilities $= [ With  DisplayRGB,
         Where DisplayDepth IsAtLeast 16,
         With  DisplaySamples,
@@ -131,26 +131,23 @@ main = do
           b <- readTVar oscUpdateTVar
           when b $ writeTVar oscUpdateTVar False
           return b
-        when b $ do  
+        when b $ do
           (PST _ _ _ _ shouldEnd) <- atomically $ readTVar state
-          --p ("idleCallback " ++ show shouldUpdate ++ " " ++ show shouldEnd) 
-          if shouldEnd then destroyWindow window else do
+          --p ("idleCallback " ++ show shouldUpdate ++ " " ++ show shouldEnd)
+          if shouldEnd then do
+              p ("Exiting pfVisualizer listening on port: " ++ show _port)
+              exitSuccess
+            else -- do
             --p "got OSC message"
             postRedisplay (Just window)
-  idleCallback $= Just (checkOSCMessages)
-  --timerCallBack window
-  -- in order to compile a binary on OSX 10.10 that runs you need to
-  -- comment out the next line (actionOnWindowClose). It uses freglut code
-  -- not available in OSX which uses normal GLUT.
-  actionOnWindowClose $= MainLoopReturns
+  idleCallback $= Just checkOSCMessages
   p ("Started pfVisualizer listening on port: " ++ show _port)
   mainLoop
-  p ("Exiting pfVisualizer listening on port: " ++ show _port)
 
 reshape :: Size -> IO ()
 reshape (Size w h) = viewport $= (Position 0 0,  Size minWH minWH) where
         minWH = min w h
-  
+
 --just redraw continually, wastes cpu
 --don't use this
 timerCallBack :: Window -> IO ()
