@@ -48,6 +48,7 @@ data Options = Options
                , _winW           :: CInt
                , _winH           :: CInt
                , _displayHelp    :: Bool
+               , _displayVersion    :: Bool
                } deriving Show
 
 makeLenses ''Options
@@ -63,6 +64,7 @@ defaultOptions  = Options
     , _winW           = 500
     , _winH           = 500
     , _displayHelp    = False
+    , _displayVersion = False
     }
 
 f :: Read b => Lens' Options b -> String -> Options -> Options
@@ -78,7 +80,8 @@ options =
        Option "z"        ["rotZ"]   (ReqArg (f rotZ)   "RADIANS")    "rotation around z axis",
        Option "w"        ["width"]  (ReqArg (f winW)   "PIXELS" )    "window width",
        Option "h"        ["height"] (ReqArg (f winH)   "PIXELS" )    "window height",
-       Option ""         ["help"]   (NoArg  (set displayHelp True))   "show this help"
+       Option ""         ["help"]   (NoArg  (set displayHelp True))   "show this help",
+       Option "v"        ["version"] (NoArg  (set displayVersion True))   "show version"
      ]
 
 processArgs :: [String] -> Options
@@ -92,7 +95,7 @@ main :: IO ()
 main = do
   (_,args) <- getArgsAndInitialize
   let
-    Options _port _label _opZoom _rotX _rotY _rotZ _winW _winH _displayHelp = processArgs args
+    Options _port _label _opZoom _rotX _rotY _rotZ _winW _winH _displayHelp _displayVersion = processArgs args
     p s = putStrLn s >> hFlush stdout
     is = map (/ 12) []--[1..12]
     v = PState.Triangles $ map (\x -> [ Vertex3 (0.1+x) 0.0 0.0, Vertex3 (0.0+x) 0.7 x, Vertex3 (0.0+x) (x-0.5) 0.0 ] ) is
@@ -104,6 +107,9 @@ main = do
   --exitSuccess
   when _displayHelp $ do
     putStrLn $ usageInfo "Usage: pfVisualizer [OPTION...]" options
+    exitSuccess
+  when _displayVersion $ do
+    putStrLn "pfVisualizer version v0.1.1.1"
     exitSuccess
   state <- newTVarIO initialState
   oscUpdateTVar <- newTVarIO False
