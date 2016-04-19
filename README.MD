@@ -46,7 +46,7 @@ If before you sent a /cubes message then the number of floats passed to /colors 
 
 # Install with the nix package manager
 
-1) Install the nix package manager from https://nixos.org/nix/. This can be done by running:
+1) Install the nix package manager from [here](https://nixos.org/nix/). This can be done by running (examine the script first and make sure you are happy with it):
 
     curl https://nixos.org/nix/install | sh
 
@@ -69,3 +69,10 @@ this will fetch all dependencies build the application which will appear as the 
     cabal install --only-dependencies
 
     cabal build
+
+# Install with stack (untested)
+
+[Install stack](http://docs.haskellstack.org/en/stable/README/#how-to-install), then do:
+
+    stack setup
+    stack build
